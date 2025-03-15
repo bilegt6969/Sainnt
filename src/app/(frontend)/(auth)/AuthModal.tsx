@@ -15,6 +15,7 @@ import {
   signInWithEmailAndPassword,
 } from '@/firebaseConfig'
 import { FirebaseError } from 'firebase/app' // Import FirebaseError for better error handling
+import { ConfirmationResult } from 'firebase/auth' // Import ConfirmationResult from Firebase Auth
 
 interface AuthModalProps {
   isOpen: boolean
@@ -23,7 +24,7 @@ interface AuthModalProps {
 
 declare global {
   interface Window {
-    confirmationResult?: any // Extend the window type to allow confirmationResult
+    confirmationResult?: ConfirmationResult // Use ConfirmationResult type
   }
 }
 
@@ -133,12 +134,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white"
               />
               <input
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white"
               />
             </>
           ) : (
@@ -148,12 +151,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white"
               />
               <input
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white"
               />
             </>
           )}
@@ -176,6 +181,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             placeholder="Phone number"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            className="w-full p-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white"
           />
           <Button className="w-full" onClick={handlePhoneSignIn}>
             Sign In with Phone

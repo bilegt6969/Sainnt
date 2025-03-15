@@ -29,9 +29,9 @@ function Page() {
   const Slug = RawSlug[1] || 'default-slug'
   const [isOpen, setIsOpen] = useState(false)
   const [selectedSize, setSelectedSize] = useState('Select Size')
-  const [PriceArrayData, setPriceArrayData] = useState([])
+  const [_PriceArrayData, _setPriceArrayData] = useState([])
   const [mntRate, setMntRate] = useState(null)
-  const [error1, setError1] = useState(null)
+  const [_error1, _setError1] = useState(null)
 
   const [NewType_Product, setNewTypeProduct] = useState([])
   const [UsedType_Product, setUsedTypeProduct] = useState([])
@@ -58,10 +58,10 @@ function Page() {
         if (data.mnt) {
           setMntRate(data.mnt)
         } else {
-          setError1('MNT rate not available')
+          _setError1('MNT rate not available')
         }
-      } catch (error) {
-        setError1('Failed to fetch currency data')
+      } catch (_error) {
+        _setError1('Failed to fetch currency data')
       }
     }
     fetchCurrencyData()
@@ -136,7 +136,7 @@ function Page() {
     }, 200)
   }
 
-  let TailoredSize =
+  const TailoredSize =
     offerType === 'new'
       ? NewType_Product
       : offerType === 'used'

@@ -107,42 +107,42 @@ const Menu = () => {
                 Shop the latest Nike sneakers and apparel.
               </Item>
               <Item title="Stüssy" href="/brands/stussy" icon={<UsersIcon className="w-5 h-5" />}>
-                Discover Stüssy's iconic streetwear.
+                Discover Stüssy&apos;s iconic streetwear.
               </Item>
               <Item
                 title="Bape"
                 href="/brands/bape"
                 icon={<CalendarRangeIcon className="w-5 h-5" />}
               >
-                Explore Bape's unique designs.
+                Explore Bape&apos;s unique designs.
               </Item>
               <Item
                 title="Vlone"
                 href="/brands/vlone"
                 icon={<CalendarRangeIcon className="w-5 h-5" />}
               >
-                Shop Vlone's exclusive collections.
+                Shop Vlone&apos;s exclusive collections.
               </Item>
               <Item
                 title="Air Jordan"
-                href="/brands/air jordan"
+                href="/brands/air-jordan"
                 icon={<CalendarRangeIcon className="w-5 h-5" />}
               >
-                Shop Air Jordan's iconic sneakers.
+                Shop Air Jordan&apos;s iconic sneakers.
               </Item>
               <Item
                 title="Supreme"
                 href="/brands/supreme"
                 icon={<CalendarRangeIcon className="w-5 h-5" />}
               >
-                Explore Supreme's streetwear collections.
+                Explore Supreme&apos;s streetwear collections.
               </Item>
               <Item
                 title="Gucci"
                 href="/brands/gucci"
                 icon={<CalendarRangeIcon className="w-5 h-5" />}
               >
-                Discover Gucci's luxury fashion.
+                Discover Gucci&apos;s luxury fashion.
               </Item>
               <Item
                 title="Adidas"
@@ -153,24 +153,24 @@ const Menu = () => {
               </Item>
               <Item
                 title="New Balance"
-                href="/brands/new balance"
+                href="/brands/new-balance"
                 icon={<CalendarRangeIcon className="w-5 h-5" />}
               >
-                Shop New Balance's classic styles.
+                Shop New Balance&apos;s classic styles.
               </Item>
               <Item
                 title="Puma"
                 href="/brands/puma"
                 icon={<CalendarRangeIcon className="w-5 h-5" />}
               >
-                Explore Puma's sportswear and sneakers.
+                Explore Puma&apos;s sportswear and sneakers.
               </Item>
               <Item
                 title="Off-White"
-                href="/brands/off white"
+                href="/brands/off-white"
                 icon={<CalendarRangeIcon className="w-5 h-5" />}
               >
-                Shop Off-White's modern designs.
+                Shop Off-White&apos;s modern designs.
               </Item>
             </motion.ul>
           </NavigationMenuContent>

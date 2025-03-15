@@ -1,48 +1,57 @@
-"use client"; // Add this directive at the top
+'use client' // Add this directive at the top
 
-import React from 'react';
-import { notFound } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import React from 'react'
+import { notFound } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
 
 interface ItemData {
-  id: string;
-  slug: string;
-  image_url: string;
-  lowest_price_cents: number;
+  id: string
+  slug: string
+  image_url: string
+  lowest_price_cents: number
 }
 
 interface Item {
-  data: ItemData;
-  value: string;
+  data: ItemData
+  value: string
+}
+
+interface ApiResponseItem {
+  data: {
+    id: string
+    slug: string
+    image_url: string
+    lowest_price_cents: number
+  }
+  value: string
 }
 
 interface BrandPageProps {
   params: {
-    brand: string;
-  };
+    brand: string
+  }
 }
 
 const fetchBrandProducts = async (brand: string) => {
   try {
-    const decodedBrand = decodeURIComponent(brand);
-    const encodedBrand = encodeURIComponent(decodedBrand);
-        const url = `https://ac.cnstrc.com/browse/brand/${encodedBrand}?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=38&page=1&num_results_per_page=24&sort_by=relevance&sort_order=descending&_dt=1741721894207`;
-    const response = await fetch(url);
-    console.log(url);
+    const decodedBrand = decodeURIComponent(brand)
+    const encodedBrand = encodeURIComponent(decodedBrand)
+    const url = `https://ac.cnstrc.com/browse/brand/${encodedBrand}?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=38&page=1&num_results_per_page=24&sort_by=relevance&sort_order=descending&_dt=1741721894207`
+    const response = await fetch(url)
+    console.log(url)
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch data: ${response.statusText}`);
+      throw new Error(`Failed to fetch data: ${response.statusText}`)
     }
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!data.response || !data.response.results) {
-      throw new Error("No results found.");
+      throw new Error('No results found.')
     }
 
-    return data.response.results.map((item: any) => ({
+    return data.response.results.map((item: ApiResponseItem) => ({
       data: {
         id: item.data.id,
         slug: item.data.slug,
@@ -50,36 +59,37 @@ const fetchBrandProducts = async (brand: string) => {
         lowest_price_cents: item.data.lowest_price_cents,
       },
       value: item.value,
-    }));
+    }))
   } catch (error) {
-    console.error("Failed to fetch brand products:", error);
-    throw error;
+    console.error('Failed to fetch brand products:', error) // Log the error
+    throw error
   }
-};
+}
 
 const BrandPage = ({ params }: BrandPageProps) => {
-  const { brand } = React.use(params); // Unwrap params using React.use()
+  const { brand } = React.use(params) // Unwrap params using React.use()
 
-  const [products, setProducts] = React.useState<Item[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [products, setProducts] = React.useState<Item[]>([])
+  const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await fetchBrandProducts(brand);
-        setProducts(data);
+        const data = await fetchBrandProducts(brand)
+        setProducts(data)
       } catch (error) {
-        notFound(); // Show 404 page if fetching fails
+        console.error('Error fetching brand products:', error) // Log the error
+        notFound() // Show 404 page if fetching fails
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, [brand]);
+    fetchData()
+  }, [brand])
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>
   }
 
   return (
@@ -100,10 +110,10 @@ const BrandPage = ({ params }: BrandPageProps) => {
               className="text-white bg-black border border-neutral-800 rounded tracking-tight relative cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-blue-900/10 hover:border-neutral-600 hover:scale-[1.02] h-fit"
               style={{
                 animationDelay: `${idx * 50}ms`,
-                animation: "fadeIn 0.5s ease-out forwards",
+                animation: 'fadeIn 0.5s ease-out forwards',
               }}
             >
-              <div className="overflow-hidden rounded-lg relative" style={{ aspectRatio: "1/1" }}>
+              <div className="overflow-hidden rounded-lg relative" style={{ aspectRatio: '1/1' }}>
                 <Image
                   className="rounded-lg mx-auto transition-transform duration-500 hover:scale-110 object-cover"
                   src={item.data.image_url}
@@ -144,7 +154,7 @@ const BrandPage = ({ params }: BrandPageProps) => {
         }
       `}</style>
     </div>
-  );
-};
+  )
+}
 
-export default BrandPage;
+export default BrandPage

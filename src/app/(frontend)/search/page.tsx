@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react' // Add useCallback
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -16,19 +16,22 @@ const SearchPage = () => {
   // Encode the query to replace spaces with %20
   const encodedQuery = query ? query.replace(/ /g, '%20') : ''
 
-  // Fetch data function
-  const fetchData = async (page) => {
-    try {
-      const url = `https://ac.cnstrc.com/search/${encodedQuery}?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=37&page=${page}&num_results_per_page=24&sort_by=relevance&sort_order=descending&_dt=1741715382729`
-      const res = await fetch(url)
-      if (!res.ok) throw new Error('Failed to fetch data')
-      const result = await res.json()
-      return result.response.results || []
-    } catch (err) {
-      setError(err.message)
-      return []
-    }
-  }
+  // Memoize fetchData with useCallback
+  const fetchData = useCallback(
+    async (page) => {
+      try {
+        const url = `https://ac.cnstrc.com/search/${encodedQuery}?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=37&page=${page}&num_results_per_page=24&sort_by=relevance&sort_order=descending&_dt=1741715382729`
+        const res = await fetch(url)
+        if (!res.ok) throw new Error('Failed to fetch data')
+        const result = await res.json()
+        return result.response.results || []
+      } catch (err) {
+        setError(err.message)
+        return []
+      }
+    },
+    [encodedQuery], // Add encodedQuery as a dependency
+  )
 
   // Initial data fetch
   useEffect(() => {
@@ -41,7 +44,7 @@ const SearchPage = () => {
     if (encodedQuery) {
       loadInitialData()
     }
-  }, [encodedQuery])
+  }, [encodedQuery, fetchData]) // Add fetchData to the dependency array
 
   // Infinite scroll: Load more data when the user scrolls to the bottom
   useEffect(() => {
@@ -65,7 +68,7 @@ const SearchPage = () => {
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [page, hasMore, encodedQuery])
+  }, [page, hasMore, fetchData]) // Add fetchData to the dependency array
 
   // Filter out products without images
   const productsWithImages = data.filter((item) => item.data.image_url)

@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword } from 'firebase/auth' // Import signInWithEmailAndPassword from firebase/auth
 import { auth } from '../../../../firebaseConfig'
 import { Input } from '../../../../components/ui/input'
 import { Button } from '../../../../components/ui/button'
 import { Label } from '../../../../components/ui/label'
 import Logo from '../../../../../public/images/Saint.svg'
 import Image from 'next/image'
+import { FirebaseError } from 'firebase/app' // Import FirebaseError from firebase/app
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
@@ -19,9 +20,14 @@ const LoginPage = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password)
       alert('Logged in successfully!')
-    } catch (error: any) {
-      console.error('Login failed:', error)
-      setError('Login failed. Please check your credentials and try again.')
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        console.error('Login failed:', error)
+        setError('Login failed. Please check your credentials and try again.')
+      } else {
+        console.error('An unknown error occurred:', error)
+        setError('An unknown error occurred. Please try again.')
+      }
     }
   }
 
@@ -31,15 +37,6 @@ const LoginPage = () => {
       <div className="w-1/2 bg-black border border-neutral-700 rounded-2xl p-8 flex flex-col justify-center items-center text-left text-white">
         <Image src={Logo} alt="Login Illustration" width={250} height={250} className="mb-6" />
         <h1 className="text-3xl font-bold text-center mb-4"></h1>
-        <p className="text-lg text-gray-300 text-center max-w-md font-semibold">
-          ᠦᠨᠡᠢᠨ ᠰᠠᠯᠬᠢ ᠲᠣᠭᠲᠤᠬᠦᠢ᠃
-          <br />
-          ᠦᠨᠡᠨ ᠦᠨᠡ ᠦᠪᠡᠷ ᠶᠡ ᠢᠯᠲᠦᠭᠡᠬᠦᠢ᠃
-          <br />
-          ᠠᠷᠢᠯᠵᠠᠭᠠᠨ ᠬᠦᠷᠮᠠᠭ ᠦᠭᠡᠢ ᠪᠣᠯᠭᠠᠵᠤᠯᠲᠤ᠃
-          <br />
-          ᠠᠷᠳᠤ ᠲᠥᠮᠡᠨ ᠡᠷᠬᠡ ᠴᠢᠯᠦᠭᠡᠲᠦᠢ!
-        </p>
       </div>
 
       {/* Right Side (Login Form) */}
@@ -84,7 +81,7 @@ const LoginPage = () => {
           </div>
           {/* Sign-Up Link */}
           <p className="text-center mt-4 text-sm text-gray-600">
-            Don't have an account?{' '}
+            {"Don't have an account? "} {/* Escaped apostrophe */}
             <a href="/auth/signup" className="text-neutral-900 underline">
               Sign Up
             </a>

@@ -1,27 +1,28 @@
-'use client';
-import { useState } from "react";
+'use client'
+import { useState } from 'react'
+import Image from 'next/image' // Import the Image component from next/image
 
 export default function Cart() {
-  const [amount, setAmount] = useState("");
-  const [invoice, setInvoice] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [amount, setAmount] = useState('')
+  const [invoice, setInvoice] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   const createInvoice = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const res = await fetch("/api/qpay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/qpay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount }),
-      });
+      })
 
-      const data = await res.json();
-      setInvoice(data);
+      const data = await res.json()
+      setInvoice(data)
     } catch (error) {
-      console.error("Error creating invoice:", error);
+      console.error('Error creating invoice:', error)
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   return (
     <div className="flex flex-col items-center p-10">
@@ -38,15 +39,18 @@ export default function Cart() {
         className="bg-blue-500 text-white px-4 py-2 rounded-md"
         disabled={loading}
       >
-        {loading ? "Generating..." : "Generate Invoice"}
+        {loading ? 'Generating...' : 'Generate Invoice'}
       </button>
 
       {invoice && (
         <div className="mt-6 p-4 border rounded-lg shadow-lg">
           <p className="font-semibold">Invoice ID: {invoice.invoice_id}</p>
-          <img
+          {/* Replace <img> with <Image /> for the QR code */}
+          <Image
             src={`data:image/png;base64,${invoice.qr_image}`}
             alt="QR Code"
+            width={200} // Set appropriate width
+            height={200} // Set appropriate height
             className="mt-4"
           />
           <a
@@ -68,7 +72,14 @@ export default function Cart() {
                   rel="noopener noreferrer"
                   className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-100"
                 >
-                  <img src={url.logo} alt={url.name} className="w-12 h-12" />
+                  {/* Replace <img> with <Image /> for bank logos */}
+                  <Image
+                    src={url.logo}
+                    alt={url.name}
+                    width={48} // Set appropriate width
+                    height={48} // Set appropriate height
+                    className="w-12 h-12"
+                  />
                   <p className="text-sm mt-2 text-center">{url.description}</p>
                 </a>
               ))}
@@ -77,5 +88,5 @@ export default function Cart() {
         </div>
       )}
     </div>
-  );
+  )
 }

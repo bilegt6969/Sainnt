@@ -47,7 +47,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ iconl, iconr, className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button'
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
+        {iconl && <span className="mr-2">{iconl}</span>} {/* Render left icon */}
+        {props.children} {/* Render button text/content */}
+        {iconr && <span className="ml-2">{iconr}</span>} {/* Render right icon */}
+      </Comp>
     )
   },
 )

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { auth } from '@/firebaseConfig'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { Avatar } from '@heroui/react'
 import { ArrowRightIcon } from 'lucide-react'
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react'
@@ -10,8 +10,8 @@ import { Button } from '../../../components/ui/button'
 import { useRouter } from 'next/navigation'
 
 const AuthButton = () => {
-  const [user, setUser] = useState<any>(null) // You can specify 'any' or use a specific type for 'user'
-  const router = useRouter() // Hook to handle routing
+  const [user, setUser] = useState<User | null>(null) // Use the User type from Firebase
+  const router = useRouter()
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -26,13 +26,11 @@ const AuthButton = () => {
   }
 
   const handleSignIn = () => {
-    // Redirect to the sign-in page
     router.push('/login')
   }
 
   return (
     <div className="flex items-center text-black">
-      {/* Only render the dropdown if the user is logged in */}
       {user ? (
         <div className="flex items-center space-x-0">
           <Dropdown>
@@ -60,13 +58,12 @@ const AuthButton = () => {
           </Dropdown>
         </div>
       ) : (
-        // Render Sign In button when no user is logged in
         <div className="">
           <Button
             size="sm"
-            variant="shadow"
+            variant="default" // or any other valid variant
             className="hover:translate-y-[1px] hover:scale-100 rounded-full border bg-white border-neutral-700"
-            onClick={handleSignIn} // Call sign-in function on button click
+            onClick={handleSignIn}
           >
             Sign In
             <ArrowRightIcon className="w-4 h-4 ml-1 hidden lg:block" />

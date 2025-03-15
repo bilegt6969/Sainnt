@@ -1,32 +1,33 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from 'react'
+import axios from 'axios'
 
 interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
+  id: string
+  name: string
+  price: number
+  image: string
 }
 
 export const useFetchProducts = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("/api/products");
-        setProducts(response.data.docs);
+        const response = await axios.get('/api/products')
+        setProducts(response.data.docs)
       } catch (err) {
-        setError("Failed to fetch products");
+        console.error('Failed to fetch products:', err) // Log the error
+        setError('Failed to fetch products')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchProducts();
-  }, []);
+    fetchProducts()
+  }, [])
 
-  return { products, loading, error };
-};
+  return { products, loading, error }
+}

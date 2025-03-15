@@ -15,7 +15,7 @@ import { Input } from '../../../../components/ui/input'
 import { Button } from '../../../../components/ui/button'
 import { Label } from '../../../../components/ui/label'
 import { SocialIcon } from 'react-social-icons' // Import the SocialIcon component
-import Logo from '../../../../public/Saint.svg'
+import Logo from '../../../../../public/images/Saint.svg'
 import Image from 'next/image'
 
 const SignUpPage = () => {

@@ -1,7 +1,6 @@
 'use client'
-
 import { cn } from '@/functions'
-import { ArrowRightIcon, XIcon, Search, ChevronRight, ShoppingBag } from 'lucide-react'
+import { XIcon, Search, ChevronRight, ShoppingBag } from 'lucide-react' // Remove ArrowRightIcon
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import Icons from '../global/icons'
@@ -20,7 +19,6 @@ import { useMediaQuery } from '@/hooks/use-media-query' // Custom hook for media
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([])
   const [recentSearches, setRecentSearches] = useState<string[]>([])

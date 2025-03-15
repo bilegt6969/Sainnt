@@ -30,10 +30,10 @@ export function PlaceholdersAndVanishInput({
 
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState !== 'visible' && intervalRef.current) {
-      clearInterval(intervalRef.current) // Clear the interval when the tab is not visible
+      clearInterval(intervalRef.current)
       intervalRef.current = null
     } else if (document.visibilityState === 'visible') {
-      startAnimation() // Restart the interval when the tab becomes visible
+      startAnimation()
     }
   }, [startAnimation])
 
@@ -102,14 +102,12 @@ export function PlaceholdersAndVanishInput({
           if (current.x < pos) {
             newArr.push(current)
           } else {
-            if (current.r <= 0) {
-              current.r = 0
-              continue
+            if (current.r > 0) {
+              current.x += Math.random() > 0.5 ? 1 : -1
+              current.y += Math.random() > 0.5 ? 1 : -1
+              current.r -= 0.05 * Math.random()
+              newArr.push(current)
             }
-            current.x += Math.random() > 0.5 ? 1 : -1
-            current.y += Math.random() > 0.5 ? 1 : -1
-            current.r -= 0.05 * Math.random()
-            newArr.push(current)
           }
         }
         newDataRef.current = newArr

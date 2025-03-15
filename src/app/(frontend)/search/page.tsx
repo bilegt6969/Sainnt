@@ -1,19 +1,18 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation.js'
-import { useState, useEffect, useCallback } from 'react' // Add useCallback
+import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, useCallback, Suspense } from 'react' // Add Suspense
 import Link from 'next/link.js'
 import Image from 'next/image.js'
 
 const SearchPage = () => {
   const [data, setData] = useState<Product[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1) // Track the current page
-  const [hasMore, setHasMore] = useState(true) // Track if there are more products to load
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
   const searchParams = useSearchParams()
   const query = searchParams.get('query')
 
-  // Encode the query to replace spaces with %20
   const encodedQuery = query ? query.replace(/ /g, '%20') : ''
 
   interface ProductData {
@@ -28,7 +27,6 @@ const SearchPage = () => {
     value: string
   }
 
-  // Memoize fetchData with useCallback
   const fetchData = useCallback(
     async (page: number): Promise<Product[]> => {
       try {
@@ -49,44 +47,41 @@ const SearchPage = () => {
     [encodedQuery],
   )
 
-  // Initial data fetch
   useEffect(() => {
     const loadInitialData = async () => {
       const newData = await fetchData(1)
       setData(newData)
-      setHasMore(newData.length > 0) // Check if there are more products to load
+      setHasMore(newData.length > 0)
     }
 
     if (encodedQuery) {
       loadInitialData()
     }
-  }, [encodedQuery, fetchData]) // Add fetchData to the dependency array
+  }, [encodedQuery, fetchData])
 
-  // Infinite scroll: Load more data when the user scrolls to the bottom
   useEffect(() => {
     const handleScroll = async () => {
       if (
         window.innerHeight + document.documentElement.scrollTop >=
-          document.documentElement.offsetHeight - 100 && // Trigger 100px before the bottom
+          document.documentElement.offsetHeight - 100 &&
         hasMore
       ) {
         const nextPage = page + 1
         const newData = await fetchData(nextPage)
 
         if (newData.length > 0) {
-          setData((prevData) => [...prevData, ...newData]) // Append new data
-          setPage(nextPage) // Update the page number
+          setData((prevData) => [...prevData, ...newData])
+          setPage(nextPage)
         } else {
-          setHasMore(false) // No more products to load
+          setHasMore(false)
         }
       }
     }
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [page, hasMore, fetchData]) // Add fetchData to the dependency array
+  }, [page, hasMore, fetchData])
 
-  // Filter out products without images
   const productsWithImages = data.filter((item) => item.data.image_url)
 
   return (
@@ -98,11 +93,7 @@ const SearchPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 gap-2 text-xs">
           {productsWithImages.length > 0 ? (
             productsWithImages.map((item, index) => (
-              <Link
-                href={`/product/${item.data.slug}`}
-                key={`${item.data.id}-${index}`} // Use a unique key
-                passHref
-              >
+              <Link href={`/product/${item.data.slug}`} key={`${item.data.id}-${index}`} passHref>
                 <div className="text-white bg-black border border-neutral-800 hover:border-neutral-600 tracking-tight relative cursor-pointer transition-all hover:shadow-lg hover:scale-[1.008]">
                   <Image
                     className="rounded-lg p-4 mx-auto"
@@ -111,7 +102,7 @@ const SearchPage = () => {
                     width={600}
                     height={600}
                     style={{ objectFit: 'cover' }}
-                    loading="lazy" // Add lazy loading
+                    loading="lazy"
                   />
                   <div className="text-sm font-bold flex items-center justify-between mt-4 border-t py-3 px-4 border-neutral-800">
                     <p className="text-xs">{item.value}</p>
@@ -134,7 +125,6 @@ const SearchPage = () => {
         </div>
       )}
 
-      {/* Show a loading spinner or message when fetching more data */}
       {hasMore && (
         <div className="text-center my-4">
           <p className="text-neutral-400">Loading more products...</p>
@@ -144,4 +134,11 @@ const SearchPage = () => {
   )
 }
 
-export default SearchPage
+// Wrap the SearchPage component in a Suspense boundary
+const SearchPageWithSuspense = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <SearchPage />
+  </Suspense>
+)
+
+export default SearchPageWithSuspense

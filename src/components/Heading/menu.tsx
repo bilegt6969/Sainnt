@@ -14,6 +14,15 @@ import React from 'react'
 import Icons from '../global/icons'
 import { motion } from 'framer-motion'
 
+// Define the Props type for the Item component
+type Props = {
+  title: string
+  href: string
+  children: React.ReactNode
+  icon: React.ReactNode
+  [key: string]: any // Allow additional props
+}
+
 const Menu = () => {
   return (
     <NavigationMenu>

@@ -33,10 +33,14 @@ const SignUpPage = () => {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password, UserName)
+      await createUserWithEmailAndPassword(auth, email, password)
       alert('Account created successfully!')
     } catch (error) {
-      setError('Error creating account: ' + error.message)
+      if (error instanceof Error) {
+        setError('Error creating account: ' + error.message)
+      } else {
+        setError('An unknown error occurred.')
+      }
     }
   }
 
@@ -46,7 +50,11 @@ const SignUpPage = () => {
       await signInWithPopup(auth, provider)
       alert('Logged in with Google!')
     } catch (error) {
-      setError(error.message)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unknown error occurred.')
+      }
     }
   }
 
@@ -56,7 +64,11 @@ const SignUpPage = () => {
       await signInWithPopup(auth, provider)
       alert('Logged in with Facebook!')
     } catch (error) {
-      setError(error.message)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unknown error occurred.')
+      }
     }
   }
 
@@ -66,18 +78,29 @@ const SignUpPage = () => {
       await signInWithPopup(auth, provider)
       alert('Logged in with Apple!')
     } catch (error) {
-      setError(error.message)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unknown error occurred.')
+      }
     }
   }
 
   const handlePhoneSignIn = async () => {
-    const appVerifier = new RecaptchaVerifier('recaptcha-container', { size: 'invisible' }, auth)
+    const appVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+    })
+
     try {
       const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier)
       window.confirmationResult = confirmationResult
       alert('Verification code sent to phone!')
     } catch (error) {
-      setError(error.message)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unknown error occurred.')
+      }
     }
   }
 

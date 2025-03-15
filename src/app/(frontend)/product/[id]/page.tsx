@@ -8,8 +8,55 @@ import { ArrowLeftIcon, ArrowRightIcon, ChevronDownIcon } from '@heroicons/react
 import useCartStore from '../../../store/cartStore'
 import { toast, Toaster } from 'sonner'
 
+// Define types
+interface PriceData {
+  sizeOption?: {
+    presentation: string
+  }
+  lastSoldPriceCents?: {
+    amount: number
+  }
+  stockStatus: string
+  shoeCondition: string
+  boxCondition: string
+}
+
+interface Product {
+  id: string
+  name: string
+  productCategory: string
+  productType: string
+  color: string
+  brandName: string
+  details: string
+  gender: string[]
+  midsole: string
+  mainPictureUrl: string
+  releaseDate: string
+  slug: string
+  upperMaterial: string
+  singleGender: string
+  story: string
+  productTemplateExternalPictures?: {
+    mainPictureUrl: string
+  }[]
+  localizedSpecialDisplayPriceCents?: {
+    amountUsdCents: number
+  }
+}
+
+interface ApiResponse {
+  data: {
+    pageProps: {
+      productTemplate: Product
+    }
+  }
+  PriceData: PriceData[]
+  recommendedProducts: Product[]
+}
+
 // Function to convert US shoe sizes to EU sizes
-const convertUSToEUSize = (usSize) => {
+const convertUSToEUSize = (usSize: string) => {
   const usSizes = Array.from({ length: 31 }, (_, i) => i.toString()) // Sizes from 0 to 30
   const euSizes = Array.from({ length: 31 }, (_, i) => (i + 34).toString()) // EU sizes from 34 to 64
 
@@ -18,9 +65,9 @@ const convertUSToEUSize = (usSize) => {
 }
 
 function Page() {
-  const [data, setData] = useState(null)
-  const [Pricedata, setPriceData] = useState(null)
-  const [error, setError] = useState(null)
+  const [data, setData] = useState<ApiResponse['data'] | null>(null)
+  const [Pricedata, setPriceData] = useState<PriceData[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [fade, setFade] = useState(false)
   const [offerType, setOfferType] = useState('new')
@@ -29,14 +76,14 @@ function Page() {
   const Slug = RawSlug[1] || 'default-slug'
   const [isOpen, setIsOpen] = useState(false)
   const [selectedSize, setSelectedSize] = useState('Select Size')
-  const [_PriceArrayData, _setPriceArrayData] = useState([])
-  const [mntRate, setMntRate] = useState(null)
-  const [_error1, _setError1] = useState(null)
+  const [_PriceArrayData, _setPriceArrayData] = useState<PriceData[]>([])
+  const [mntRate, setMntRate] = useState<number | null>(null)
+  const [_error1, _setError1] = useState<string | null>(null)
 
-  const [NewType_Product, setNewTypeProduct] = useState([])
-  const [UsedType_Product, setUsedTypeProduct] = useState([])
-  const [OfferType_Product, setOfferTypeProduct] = useState([])
-  const [recommendedProducts, setRecommendedProducts] = useState([])
+  const [NewType_Product, setNewTypeProduct] = useState<PriceData[]>([])
+  const [UsedType_Product, setUsedTypeProduct] = useState<PriceData[]>([])
+  const [OfferType_Product, setOfferTypeProduct] = useState<PriceData[]>([])
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([])
 
   const addToCart = useCartStore((state) => state.addToCart)
 
@@ -44,7 +91,7 @@ function Page() {
   const toggleDropdown = () => setIsOpen(!isOpen)
 
   // Handle size selection
-  const handleSizeSelect = (size) => {
+  const handleSizeSelect = (size: string) => {
     setSelectedSize(size)
     setIsOpen(false)
   }
@@ -75,7 +122,7 @@ function Page() {
         if (!response.ok) {
           throw new Error('Failed to fetch data')
         }
-        const result = await response.json()
+        const result: ApiResponse = await response.json()
         setData(result.data)
         setPriceData(result.PriceData)
         setRecommendedProducts(result.recommendedProducts || [])
@@ -105,7 +152,11 @@ function Page() {
           ),
         )
       } catch (err) {
-        setError(err.message)
+        if (err instanceof Error) {
+          setError(err.message) // Now TypeScript knows `err` is an Error object
+        } else {
+          setError('An unknown error occurred') // Handle non-Error cases
+        }
       }
     }
 
@@ -145,9 +196,13 @@ function Page() {
           ? OfferType_Product
           : []
 
-  const sizeOptions = [...new Set(TailoredSize?.map((item) => item.sizeOption?.presentation))]
+  const sizeOptions = [
+    ...new Set(TailoredSize?.map((item: PriceData) => item.sizeOption?.presentation)),
+  ]
 
-  const King = TailoredSize.filter((item) => item.sizeOption?.presentation === selectedSize)
+  const King = TailoredSize.filter(
+    (item: PriceData) => item.sizeOption?.presentation === selectedSize,
+  )
 
   if (mntRate === null) {
     return <div>Loading currency data...</div>
@@ -155,7 +210,8 @@ function Page() {
 
   const handleAddToCart = async () => {
     if (King.length > 0) {
-      addToCart(product, selectedSize, (King[0].lastSoldPriceCents?.amount * mntRate) / 100)
+      const price = ((King[0].lastSoldPriceCents?.amount ?? 0) * mntRate) / 100
+      addToCart(product, selectedSize, price)
       toast.success('Added to cart!')
     } else {
       toast.error('Please select a size.')
@@ -214,7 +270,7 @@ function Page() {
 
             {/* Thumbnail Selector */}
             <div className="flex gap-2 mt-3 mb-4">
-              {images.map((img, index) => (
+              {images.map((img: string, index: number) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImageIndex(index)}
@@ -326,10 +382,10 @@ function Page() {
                         {sizeOptions.map((size) => (
                           <button
                             key={size}
-                            onClick={() => handleSizeSelect(size)}
+                            onClick={() => handleSizeSelect(size ?? '')}
                             className="block w-full px-4 py-2 text-sm bg-black border border-neutral-700 p-1 rounded-xl text-center text-white hover:bg-neutral-900 transition-colors duration-200"
                           >
-                            {size.includes('US')
+                            {size && size.includes('US')
                               ? `${size} (EU ${convertUSToEUSize(size.replace('US ', ''))})`
                               : size}
                           </button>
@@ -350,7 +406,7 @@ function Page() {
                     {King[0].lastSoldPriceCents?.amount === 0
                       ? 'Unavailable'
                       : `₮ ${(
-                          (King[0].lastSoldPriceCents?.amount * mntRate) /
+                          ((King[0].lastSoldPriceCents?.amount ?? 0) * mntRate) /
                           100
                         ).toLocaleString()}`}
                   </span>
@@ -447,7 +503,8 @@ function Page() {
                         <span className="block group-hover:opacity-0 transition-opacity duration-300">
                           ₮{' '}
                           {Math.ceil(
-                            (product.localizedSpecialDisplayPriceCents?.amountUsdCents * mntRate) /
+                            ((product.localizedSpecialDisplayPriceCents?.amountUsdCents ?? 0) *
+                              mntRate) /
                               100,
                           ).toLocaleString()}
                         </span>

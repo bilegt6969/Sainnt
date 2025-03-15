@@ -38,14 +38,14 @@ const AuthButton = () => {
               <div>
                 <Avatar
                   showFallback
-                  className="bg-[#232323] border border-neutral-700 h-8 w-8 "
-                  src={user.photoURL}
+                  className="bg-[#232323] border border-neutral-700 h-8 w-8"
+                  src={user.photoURL || undefined} // Convert null to undefined
                 />
               </div>
             </DropdownTrigger>
             <DropdownMenu aria-label="User Actions">
               <DropdownItem key="sign-out">
-                <Button size="sm" color="danger" auto onClick={handleSignOut}>
+                <Button size="sm" color="danger" onClick={handleSignOut}>
                   Sign Out
                 </Button>
               </DropdownItem>

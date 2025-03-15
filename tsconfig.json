@@ -8,7 +8,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -20,9 +20,11 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@payload-config": ["./src/payload.config.ts"]
+      "@payload-config": ["./src/payload.config.ts"],
+      "@payloadcms/next/views": ["mocks/payloadcms-next-views.tsx"]
     },
-    "target": "ES2022"
+    "target": "ES2022",
+    "types": ["react", "react-dom"] // Add this line
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

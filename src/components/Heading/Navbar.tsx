@@ -8,14 +8,120 @@ import Wrapper from '../global/wrapper'
 import { Button } from '../ui/button'
 import Menu from './menu'
 import MobileMenu from './mobile-menu'
+import React, { forwardRef, ChangeEvent, FormEvent } from 'react'
 import Logo from '../../../public/images/Logo.svg'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import AuthButton from '../../app/(frontend)/(auth)/AuthButton'
-import { PlaceholdersAndVanishInput } from '../ui/placeholders-and-vanish-input'
 import useCartStore from '../../app/store/cartStore'
 import { useMediaQuery } from '@/hooks/use-media-query' // Custom hook for media queries
+
+// PlaceholdersAndVanishInput component
+type PlaceholdersAndVanishInputProps = {
+  placeholders: string[]
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void
+  onSubmit: (e: FormEvent<HTMLFormElement>) => void
+}
+
+export const PlaceholdersAndVanishInput = forwardRef<
+  HTMLInputElement,
+  PlaceholdersAndVanishInputProps
+>(({ placeholders, onChange, onSubmit }, ref) => {
+  const [placeholder, setPlaceholder] = useState('')
+  const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0)
+  const [typing, setTyping] = useState(false)
+  const [value, setValue] = useState('')
+
+  // Cycle through placeholders
+  useEffect(() => {
+    if (!placeholders.length) return
+
+    const cycleInterval = setInterval(() => {
+      if (!typing) {
+        setCurrentPlaceholderIndex((prevIndex) => (prevIndex + 1) % placeholders.length)
+      }
+    }, 3000)
+
+    return () => clearInterval(cycleInterval)
+  }, [placeholders, typing])
+
+  // Update placeholder when index changes
+  useEffect(() => {
+    if (!placeholders.length) return
+
+    const newPlaceholder = placeholders[currentPlaceholderIndex]
+    let i = 0
+
+    // Clear previous placeholder with a typing effect
+    const clearingInterval = setInterval(() => {
+      setPlaceholder((prev) => prev.slice(0, -1))
+
+      if (i++ > placeholder.length) {
+        clearInterval(clearingInterval)
+
+        // Type new placeholder
+        let j = 0
+        const typeInterval = setInterval(() => {
+          setPlaceholder((prev) => prev + newPlaceholder[j])
+          j++
+
+          if (j >= newPlaceholder.length) {
+            clearInterval(typeInterval)
+          }
+        }, 50)
+      }
+    }, 25)
+
+    return () => {
+      clearInterval(clearingInterval)
+    }
+  }, [currentPlaceholderIndex, placeholders])
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    setValue(newValue)
+    setTyping(newValue.length > 0)
+    onChange(e)
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        onSubmit(e)
+        setValue('')
+        setTyping(false)
+      }}
+      className="relative w-full"
+    >
+      <div className="relative flex items-center">
+        <Search className="absolute left-4 text-neutral-500 w-5 h-5" />
+        <input
+          ref={ref}
+          type="text"
+          value={value}
+          onChange={handleInputChange}
+          className="w-full py-3 pl-12 pr-4 text-base bg-neutral-900 border border-neutral-700 rounded-full text-white focus:outline-none focus:ring-1 focus:ring-neutral-500 focus:border-neutral-500 placeholder-neutral-500"
+          aria-label="Search"
+        />
+        <AnimatePresence>
+          {!value && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute left-12 pointer-events-none text-neutral-500"
+            >
+              {placeholder}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </form>
+  )
+})
+
+PlaceholdersAndVanishInput.displayName = 'PlaceholdersAndVanishInput'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false)

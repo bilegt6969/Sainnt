@@ -2,9 +2,24 @@
 import { useState } from 'react'
 import Image from 'next/image' // Import the Image component from next/image
 
+// Define the Invoice type
+interface InvoiceUrl {
+  link: string
+  logo: string
+  name: string
+  description: string
+}
+
+interface Invoice {
+  invoice_id: string
+  qr_image: string
+  qPay_shortUrl: string
+  urls: InvoiceUrl[]
+}
+
 export default function Cart() {
   const [amount, setAmount] = useState('')
-  const [invoice, setInvoice] = useState(null)
+  const [invoice, setInvoice] = useState<Invoice | null>(null) // Use the Invoice type
   const [loading, setLoading] = useState(false)
 
   const createInvoice = async () => {
@@ -16,7 +31,7 @@ export default function Cart() {
         body: JSON.stringify({ amount }),
       })
 
-      const data = await res.json()
+      const data: Invoice = await res.json() // Type the API response
       setInvoice(data)
     } catch (error) {
       console.error('Error creating invoice:', error)

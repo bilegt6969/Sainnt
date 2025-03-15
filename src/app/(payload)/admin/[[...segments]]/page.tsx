@@ -3,6 +3,7 @@
 import type { Metadata } from 'next'
 
 import config from '@payload-config'
+// Replace the problematic imports with the mock implementations
 import { RootPage, generatePageMetadata } from '@payloadcms/next/views'
 import { importMap } from '../importMap'
 
@@ -15,10 +16,22 @@ type Args = {
   }>
 }
 
-export const generateMetadata = ({ params, searchParams }: Args): Promise<Metadata> =>
-  generatePageMetadata({ config, params, searchParams })
+export const generateMetadata = async ({ params, searchParams }: Args): Promise<Metadata> => {
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
 
-const Page = ({ params, searchParams }: Args) =>
-  RootPage({ config, params, searchParams, importMap })
+  return generatePageMetadata({
+    config,
+    params: resolvedParams,
+    searchParams: resolvedSearchParams,
+  })
+}
+
+const Page = async ({ params, searchParams }: Args) => {
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
+
+  return RootPage({ config, params: resolvedParams, searchParams: resolvedSearchParams, importMap })
+}
 
 export default Page

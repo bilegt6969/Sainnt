@@ -32,7 +32,7 @@ const Home = () => {
   const [mntRate, setMntRate] = useState<number | null>(null)
   const [activeProductIndex, setActiveProductIndex] = useState<{ [key: string]: number }>({})
   const [visibleSections, setVisibleSections] = useState<string[]>([])
-  const sectionRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>({})
+  const sectionRefs = useRef<{ [key: string]: React.RefObject<HTMLDivElement | null> }>({})
   const urls = [
     'https://ac.cnstrc.com/browse/collection_id/top-trending-canada?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=5&page=1&num_results_per_page=10&sort_by=relevance&sort_order=descending&_dt=1740739279383',
     'https://ac.cnstrc.com/browse/collection_id/new-arrivals-apparel?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=4&page=1&num_results_per_page=10&sort_by=relevance&sort_order=descending&_dt=1740739819767',
@@ -244,6 +244,7 @@ const Home = () => {
               label = res.request.term.charAt(0).toUpperCase() + res.request.term.slice(1)
             } else {
               const staticLabels = {
+                el1: ['All Sneakers', "Women's Sneakers", 'Grade School', 'Pre School'],
                 el2: ['All Sneakers', "Women's Sneakers", 'Grade School', 'Pre School'],
                 el3: ['Vintage', 'Instant Ship', 'Tees', 'Hoodies'],
                 el4: ['Hats', 'Eyewear', 'Tops', 'Bottoms'],
@@ -312,10 +313,13 @@ const Home = () => {
     }
   }, [])
 
+  // Initialize refs at the top level
+  for (let i = 0; i < 12; i++) {
+    sectionRefs.current[`section-${i}`] = React.createRef<HTMLDivElement>()
+  }
+
   useEffect(() => {
-    for (let i = 0; i < 12; i++) {
-      sectionRefs.current[`section-${i}`] = React.createRef()
-    }
+    // Any side-effects can be handled here
   }, [])
 
   useEffect(() => {
@@ -360,7 +364,8 @@ const Home = () => {
                 {/* Price Tag on Top (Mobile Only) */}
                 <div className="block lg:hidden w-full text-xs font-bold flex items-center p-4 bg-black backdrop-brightness-90 border-b border-neutral-700">
                   <span className="block">
-                    MNT {Math.ceil((item.data.lowest_price_cents * mntRate) / 100).toLocaleString()}
+                    MNT{' '}
+                    {Math.ceil((item.data.lowest_price_cents * mntRate!) / 100).toLocaleString()}
                   </span>
                 </div>
 
@@ -382,7 +387,8 @@ const Home = () => {
                 {/* Price Tag Below Image (Desktop Only) */}
                 <div className="hidden lg:flex w-full text-xs font-bold flex items-center p-4 border-t border-neutral-700 justify-between relative group transition-all duration-300 hover:border-neutral-700">
                   <span className="block">
-                    MNT {Math.ceil((item.data.lowest_price_cents * mntRate) / 100).toLocaleString()}
+                    MNT{' '}
+                    {Math.ceil((item.data.lowest_price_cents * mntRate!) / 100).toLocaleString()}
                   </span>
                 </div>
 
@@ -414,7 +420,8 @@ const Home = () => {
                 {/* Price Tag on Top (Mobile Only) */}
                 <div className="block lg:hidden w-full text-xs font-bold flex items-center p-2 bg-neutral-800 backdrop-brightness-90 border-b border-neutral-700">
                   <span className="block">
-                    MNT {Math.ceil((item.data.lowest_price_cents * mntRate) / 100).toLocaleString()}
+                    MNT{' '}
+                    {Math.ceil((item.data.lowest_price_cents * mntRate!) / 100).toLocaleString()}
                   </span>
                 </div>
 
@@ -436,7 +443,8 @@ const Home = () => {
                 {/* Price Tag Below Image (Desktop Only) */}
                 <div className="hidden lg:flex w-full text-xs font-bold flex items-center p-4 border-t border-neutral-700 justify-between relative group transition-all duration-300 hover:border-neutral-700">
                   <span className="block">
-                    MNT {Math.ceil((item.data.lowest_price_cents * mntRate) / 100).toLocaleString()}
+                    MNT{' '}
+                    {Math.ceil((item.data.lowest_price_cents * mntRate!) / 100).toLocaleString()}
                   </span>
                 </div>
 
@@ -651,7 +659,9 @@ const Home = () => {
                   ))}
                 </div>
 
-                <div className="mt-[10rem]">{renderCategoryItems(elKey)}</div>
+                {typeof elKey === 'string' ? (
+                  <div className="mt-[10rem]">{renderCategoryItems(elKey)}</div>
+                ) : null}
               </>
             ) : (
               <div className="animate-pulse">

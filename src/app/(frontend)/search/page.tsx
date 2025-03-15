@@ -1,13 +1,13 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation.js'
 import { useState, useEffect, useCallback } from 'react' // Add useCallback
-import Link from 'next/link'
-import Image from 'next/image'
+import Link from 'next/link.js'
+import Image from 'next/image.js'
 
 const SearchPage = () => {
-  const [data, setData] = useState([])
-  const [error, setError] = useState(null)
+  const [data, setData] = useState<Product[]>([])
+  const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1) // Track the current page
   const [hasMore, setHasMore] = useState(true) // Track if there are more products to load
   const searchParams = useSearchParams()
@@ -16,21 +16,37 @@ const SearchPage = () => {
   // Encode the query to replace spaces with %20
   const encodedQuery = query ? query.replace(/ /g, '%20') : ''
 
+  interface ProductData {
+    id: string
+    slug: string
+    image_url: string
+    lowest_price_cents: number
+  }
+
+  interface Product {
+    data: ProductData
+    value: string
+  }
+
   // Memoize fetchData with useCallback
   const fetchData = useCallback(
-    async (page) => {
+    async (page: number): Promise<Product[]> => {
       try {
         const url = `https://ac.cnstrc.com/search/${encodedQuery}?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=37&page=${page}&num_results_per_page=24&sort_by=relevance&sort_order=descending&_dt=1741715382729`
         const res = await fetch(url)
         if (!res.ok) throw new Error('Failed to fetch data')
         const result = await res.json()
         return result.response.results || []
-      } catch (err) {
-        setError(err.message)
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message)
+        } else {
+          setError('An unknown error occurred')
+        }
         return []
       }
     },
-    [encodedQuery], // Add encodedQuery as a dependency
+    [encodedQuery],
   )
 
   // Initial data fetch

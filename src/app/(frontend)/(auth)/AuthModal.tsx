@@ -96,7 +96,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   }
 
   const handlePhoneSignIn = async () => {
-    const appVerifier = new RecaptchaVerifier('recaptcha-container', { size: 'invisible' }, auth)
+    const appVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+    })
+
     try {
       const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier)
       window.confirmationResult = confirmationResult // Store confirmation result on window object

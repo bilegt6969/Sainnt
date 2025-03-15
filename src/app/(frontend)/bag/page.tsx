@@ -4,10 +4,23 @@ import useCartStore from '../../../app/store/cartStore'
 import Link from 'next/link'
 import Image from 'next/image'
 
+// Define the CartItem type
+interface CartItem {
+  product: {
+    id: string
+    name: string
+    image_url?: string
+  }
+  size: string
+  quantity: number
+  price: number
+}
+
 export default function BagPage() {
   const { cart, removeFromCart, clearCart } = useCartStore()
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  // Explicitly type the `sum` and `item` parameters
+  const total = cart.reduce((sum: number, item: CartItem) => sum + item.price * item.quantity, 0)
 
   return (
     <div className="p-8 bg-black rounded-2xl border border-neutral-700 text-white">
@@ -16,7 +29,7 @@ export default function BagPage() {
         <p>Your bag is empty.</p>
       ) : (
         <div className="space-y-4">
-          {cart.map((item, index) => (
+          {cart.map((item: CartItem, index: number) => (
             <div
               key={index}
               className="flex justify-between items-center p-4 bg-neutral-800 border border-neutral-700 rounded-2xl"

@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 
 // Dynamically import the client component with no SSR
 // This is now in a client component, so ssr: false is allowed
-const BrandPageClient = dynamic(() => import('./client'), { ssr: false })
+const BrandPageClient = dynamic(() => import('./Client'), { ssr: false })
 
 export default function BrandPageWrapper({ brand }: { brand: string }) {
   return (

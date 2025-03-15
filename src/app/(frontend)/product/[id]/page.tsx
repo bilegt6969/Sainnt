@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeftIcon, ArrowRightIcon, ChevronDownIcon } from '@heroicons/react/outline'
+import { ArrowLeftIcon, ArrowRightIcon, ChevronDownIcon } from '@heroicons/react/24/solid'
 import useCartStore from '../../../store/cartStore'
 import { toast, Toaster } from 'sonner'
 

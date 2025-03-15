@@ -1,6 +1,6 @@
-'use client' // Add this directive at the top
+'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -27,66 +27,51 @@ interface ApiResponseItem {
   value: string
 }
 
-interface BrandPageProps {
-  params: {
-    brand: string
-  }
-}
+// Create a client component for the product list with styling
+const BrandPage = ({ params }: { params: { brand: string } }) => {
+  const [products, setProducts] = useState<Item[]>([])
+  const [loading, setLoading] = useState(true)
 
-const fetchBrandProducts = async (brand: string) => {
-  try {
-    const decodedBrand = decodeURIComponent(brand)
-    const encodedBrand = encodeURIComponent(decodedBrand)
-    const url = `https://ac.cnstrc.com/browse/brand/${encodedBrand}?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=38&page=1&num_results_per_page=24&sort_by=relevance&sort_order=descending&_dt=1741721894207`
-    const response = await fetch(url)
-    console.log(url)
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-
-    if (!data.response || !data.response.results) {
-      throw new Error('No results found.')
-    }
-
-    return data.response.results.map((item: ApiResponseItem) => ({
-      data: {
-        id: item.data.id,
-        slug: item.data.slug,
-        image_url: item.data.image_url,
-        lowest_price_cents: item.data.lowest_price_cents,
-      },
-      value: item.value,
-    }))
-  } catch (error) {
-    console.error('Failed to fetch brand products:', error) // Log the error
-    throw error
-  }
-}
-
-const BrandPage = ({ params }: BrandPageProps) => {
-  const { brand } = React.use(params) // Unwrap params using React.use()
-
-  const [products, setProducts] = React.useState<Item[]>([])
-  const [loading, setLoading] = React.useState(true)
-
-  React.useEffect(() => {
-    const fetchData = async () => {
+  useEffect(() => {
+    const fetchBrandProducts = async () => {
       try {
-        const data = await fetchBrandProducts(brand)
-        setProducts(data)
-      } catch (error) {
-        console.error('Error fetching brand products:', error) // Log the error
-        notFound() // Show 404 page if fetching fails
-      } finally {
+        const brand = params.brand
+        const decodedBrand = decodeURIComponent(brand)
+        const encodedBrand = encodeURIComponent(decodedBrand)
+        const url = `https://ac.cnstrc.com/browse/brand/${encodedBrand}?c=ciojs-client-2.54.0&key=key_XT7bjdbvjgECO5d8&i=c1a92cc3-02a4-4244-8e70-bee6178e8209&s=38&page=1&num_results_per_page=24&sort_by=relevance&sort_order=descending&_dt=1741721894207`
+
+        const response = await fetch(url)
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+
+        if (!data.response || !data.response.results) {
+          throw new Error('No results found.')
+        }
+
+        const formattedProducts = data.response.results.map((item: ApiResponseItem) => ({
+          data: {
+            id: item.data.id,
+            slug: item.data.slug,
+            image_url: item.data.image_url,
+            lowest_price_cents: item.data.lowest_price_cents,
+          },
+          value: item.value,
+        }))
+
+        setProducts(formattedProducts)
         setLoading(false)
+      } catch (error) {
+        console.error('Failed to fetch brand products:', error)
+        notFound()
       }
     }
 
-    fetchData()
-  }, [brand])
+    fetchBrandProducts()
+  }, [params.brand])
 
   if (loading) {
     return <div>Loading...</div>
@@ -96,10 +81,10 @@ const BrandPage = ({ params }: BrandPageProps) => {
     <div className="p-6">
       <div className="flex justify-between items-center">
         <h1 className="font-extrabold text-white text-3xl my-8 relative">
-          {decodeURIComponent(brand)} Products
+          {decodeURIComponent(params.brand)} Products
         </h1>
-        <Link className="text-white font-bold text-lg underline" href={`/brands/${brand}`}>
-          View all {decodeURIComponent(brand)} Items
+        <Link className="text-white font-bold text-lg underline" href={`/brands/${params.brand}`}>
+          View all {decodeURIComponent(params.brand)} Items
         </Link>
       </div>
 
@@ -141,7 +126,7 @@ const BrandPage = ({ params }: BrandPageProps) => {
         ))}
       </div>
 
-      <style jsx global>{`
+      <style jsx>{`
         @keyframes fadeIn {
           from {
             opacity: 0;

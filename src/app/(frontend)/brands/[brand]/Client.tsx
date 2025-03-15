@@ -1,4 +1,3 @@
-// file: src/app/(frontend)/brands/[brand]/client.tsx
 'use client'
 
 import React, { useEffect, useState } from 'react'
@@ -28,7 +27,7 @@ interface ApiResponseItem {
   value: string
 }
 
-export default function BrandPageClient({ brand }: { brand: string }) {
+export default function BrandPageClient({ brand, brandData }: { brand: string; brandData?: any }) {
   const [products, setProducts] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
 

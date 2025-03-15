@@ -7,10 +7,10 @@ import dynamic from 'next/dynamic'
 // This is now in a client component, so ssr: false is allowed
 const BrandPageClient = dynamic(() => import('./Client'), { ssr: false })
 
-export default function BrandPageWrapper({ brand }: { brand: string }) {
+export default function BrandPageWrapper({ brand, brandData }: { brand: string; brandData?: any }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <BrandPageClient brand={brand} />
+      <BrandPageClient brand={brand} brandData={brandData} />
     </Suspense>
   )
 }

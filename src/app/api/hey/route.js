@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 // Configuration
 const CACHE_TTL = process.env.CACHE_TTL || 30 * 60 * 1000 // 30 minutes
 const DEFAULT_RETRIES = process.env.DEFAULT_RETRIES || 3
-const DEFAULT_TIMEOUT = process.env.DEFAULT_TIMEOUT || 10000
+const DEFAULT_TIMEOUT = process.env.NODE_ENV === 'production' ? 20000 : 10000 // 20 seconds in production
 
 // Helper function to fetch with timeout and retries
 const fetchWithRetry = async (
@@ -81,7 +81,7 @@ export async function GET(req) {
   // Generate a realistic-looking session ID
   const sessionId = Math.random().toString(36).substring(2, 15)
 
-  const baseUrl = 'https://www.goat.com'
+  const baseUrl = process.env.BASE_URL || 'https://www.goat.com'
   const nextDataUrl = `${baseUrl}/_next/data/ttPvG4Z_6ePho2xBcGAo6/en-us/apparel/${slug}.json?tab=new&expandedSize=101&productTemplateSlug=${slug}`
 
   console.log(`Fetching product data from: ${nextDataUrl}`)

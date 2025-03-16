@@ -8,13 +8,12 @@ import { ArrowLeftIcon, ArrowRightIcon, ChevronDownIcon } from '@heroicons/react
 import useCartStore from '../../../store/cartStore'
 import { toast, Toaster } from 'sonner'
 
-// Define types
 interface PriceData {
   sizeOption?: {
     presentation: string
   }
   lastSoldPriceCents?: {
-    amount: number
+    amount: number | null | undefined
   }
   stockStatus: string
   shoeCondition: string
@@ -54,7 +53,6 @@ interface ApiResponse {
   PriceData: PriceData[]
   recommendedProducts: Product[]
   productId: PriceData[]
-
   PriceTagUrl: PriceData[]
   recommendedUrl: PriceData[]
 }
@@ -127,27 +125,23 @@ function Page() {
           throw new Error('Failed to fetch data')
         }
         const result: ApiResponse = await response.json()
-        console.log(result.productId)
-        console.log(result.PriceTagUrl)
-        console.log(result.recommendedUrl)
 
-        setData(result.data)
-        setPriceData(result.PriceData)
-        setRecommendedProducts(result.recommendedProducts || [])
-
-        const AvailableProducts = result.PriceData.filter(
-          (item) =>
-            item.stockStatus === 'multiple_in_stock' || item.stockStatus === 'single_in_stock',
-        )
+        const AvailableProducts =
+          result.PriceData?.filter(
+            (item) =>
+              item.stockStatus === 'multiple_in_stock' || item.stockStatus === 'single_in_stock',
+          ) || [] // Fallback to empty array if undefined
 
         setNewTypeProduct(
           AvailableProducts.filter(
             (item) =>
               item.shoeCondition === 'new_no_defects' && item.boxCondition === 'good_condition',
-          ),
+          ) || [], // Fallback to empty array
         )
 
-        setUsedTypeProduct(AvailableProducts.filter((item) => item.shoeCondition === 'used'))
+        setUsedTypeProduct(
+          AvailableProducts.filter((item) => item.shoeCondition === 'used') || [], // Fallback to empty array
+        )
 
         setOfferTypeProduct(
           AvailableProducts.filter(
@@ -157,13 +151,13 @@ function Page() {
               item.boxCondition === 'good_condition' ||
               item.boxCondition === 'badly_damaged' ||
               item.boxCondition === 'no_original_box',
-          ),
+          ) || [], // Fallback to empty array
         )
       } catch (err) {
         if (err instanceof Error) {
-          setError(err.message) // Now TypeScript knows `err` is an Error object
+          setError(err.message)
         } else {
-          setError('An unknown error occurred') // Handle non-Error cases
+          setError('An unknown error occurred')
         }
       }
     }
@@ -197,11 +191,11 @@ function Page() {
 
   const TailoredSize =
     offerType === 'new'
-      ? NewType_Product
+      ? (NewType_Product ?? [])
       : offerType === 'used'
-        ? UsedType_Product
+        ? (UsedType_Product ?? [])
         : offerType === 'offer'
-          ? OfferType_Product
+          ? (OfferType_Product ?? [])
           : []
 
   const sizeOptions = [
@@ -218,6 +212,11 @@ function Page() {
 
   const handleAddToCart = async () => {
     if (King.length > 0) {
+      const priceCents = King[0].lastSoldPriceCents?.amount
+      if (priceCents === null || priceCents === undefined || priceCents === 0) {
+        toast.error('Price is unavailable.')
+        return
+      }
       const price = ((King[0].lastSoldPriceCents?.amount ?? 0) * mntRate) / 100
       addToCart(product, selectedSize, price)
       toast.success('Added to cart!')
@@ -411,7 +410,9 @@ function Page() {
                 <div className="">
                   <h1>Buy Now for</h1>
                   <span className="text-2xl">
-                    {King[0].lastSoldPriceCents?.amount === 0
+                    {King[0].lastSoldPriceCents?.amount === null ||
+                    King[0].lastSoldPriceCents?.amount === undefined ||
+                    King[0].lastSoldPriceCents?.amount === 0
                       ? 'Unavailable'
                       : `₮ ${(
                           ((King[0].lastSoldPriceCents?.amount ?? 0) * mntRate) /
@@ -421,7 +422,11 @@ function Page() {
                   <div className="">
                     <button
                       onClick={handleAddToCart}
-                      disabled={King[0].lastSoldPriceCents?.amount === 0}
+                      disabled={
+                        King[0].lastSoldPriceCents?.amount === null ||
+                        King[0].lastSoldPriceCents?.amount === undefined ||
+                        King[0].lastSoldPriceCents?.amount === 0
+                      }
                       className="px-4 py-2 rounded-full bg-white text-black border border-neutral-700 mt-8"
                     >
                       Add to Cart
@@ -510,11 +515,14 @@ function Page() {
                       <div className="bg-neutral-800 backdrop-brightness-90 border border-neutral-700 group-hover:bg-neutral-600 py-2 px-2 rounded-full whitespace-nowrap transition-all duration-300 ease-out min-w-[90px] text-center relative">
                         <span className="block group-hover:opacity-0 transition-opacity duration-300">
                           ₮{' '}
-                          {Math.ceil(
-                            ((product.localizedSpecialDisplayPriceCents?.amountUsdCents ?? 0) *
-                              mntRate) /
-                              100,
-                          ).toLocaleString()}
+                          {product.localizedSpecialDisplayPriceCents?.amountUsdCents === null ||
+                          product.localizedSpecialDisplayPriceCents?.amountUsdCents === undefined
+                            ? 'Unavailable'
+                            : Math.ceil(
+                                ((product.localizedSpecialDisplayPriceCents?.amountUsdCents ?? 0) *
+                                  mntRate) /
+                                  100,
+                              ).toLocaleString()}
                         </span>
                         <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           Cart

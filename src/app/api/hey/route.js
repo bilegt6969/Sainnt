@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 
-// Enhanced helper function with better error handling and direct JSON response checking
+// Helper function to fetch with timeout and retries
 const fetchWithRetry = async (url, options = {}, retries = 3, timeout = 15000) => {
   for (let i = 0; i < retries; i++) {
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
 
-      // Add comprehensive browser-like headers
+      // Use browser-like headers
       const headers = {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
@@ -34,7 +34,6 @@ const fetchWithRetry = async (url, options = {}, retries = 3, timeout = 15000) =
       })
       clearTimeout(timeoutId)
 
-      // Log response status and headers for debugging
       console.log(`Response status for ${url}: ${response.status}`)
 
       if (!response.ok) {
@@ -54,7 +53,6 @@ const fetchWithRetry = async (url, options = {}, retries = 3, timeout = 15000) =
       } else {
         const text = await response.text()
         try {
-          // Try to parse as JSON anyway
           return JSON.parse(text)
         } catch (e) {
           console.error(`Response is not JSON: ${text.substring(0, 200)}...`)
@@ -66,7 +64,6 @@ const fetchWithRetry = async (url, options = {}, retries = 3, timeout = 15000) =
 
       if (i === retries - 1) throw error
 
-      // Exponential backoff
       const delay = 2000 * Math.pow(2, i)
       console.log(`Waiting ${delay}ms before retry...`)
       await new Promise((resolve) => setTimeout(resolve, delay))
@@ -85,7 +82,6 @@ const fetchBuildId = async () => {
     })
     const html = await response.text()
 
-    // Extract build ID from the HTML
     const buildIdMatch = html.match(/"buildId":"([^"]+)"/)
     if (buildIdMatch && buildIdMatch[1]) {
       console.log('Found build ID:', buildIdMatch[1])
@@ -97,6 +93,67 @@ const fetchBuildId = async () => {
   } catch (error) {
     console.error('Failed to fetch build ID:', error)
     return 'ttPvG4Z_6ePho2xBcGAo6'
+  }
+}
+
+// Function to extract price data directly from the product data
+const extractPriceData = (productData) => {
+  try {
+    if (!productData?.pageProps?.productTemplate) {
+      return null
+    }
+
+    const product = productData.pageProps.productTemplate
+    const variants = product.productVariants || []
+
+    // Extract price information from the product data
+    let priceData = {
+      lowestPrice: null,
+      sizes: [],
+    }
+
+    variants.forEach((variant) => {
+      if (variant.size && variant.lowestPriceOption) {
+        const price = variant.lowestPriceOption.price
+
+        // Track the lowest price
+        if (priceData.lowestPrice === null || price < priceData.lowestPrice) {
+          priceData.lowestPrice = price
+        }
+
+        // Add size information
+        priceData.sizes.push({
+          size: variant.size,
+          price: price,
+          inStock: variant.stockStatus === 'in_stock',
+        })
+      }
+    })
+
+    return priceData
+  } catch (error) {
+    console.error('Error extracting price data:', error)
+    return null
+  }
+}
+
+// Function to extract recommended products from the product data
+const extractRecommendedProducts = (productData) => {
+  try {
+    const relatedProducts = productData?.pageProps?.productTemplate?.relatedProductTemplates || []
+
+    // Map related products to a simplified format
+    return relatedProducts.map((product) => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      brand: product.brand,
+      imageUrl: product.mainPictureUrl,
+      price: product.retailPrice,
+    }))
+  } catch (error) {
+    console.error('Error extracting recommended products:', error)
+    return []
   }
 }
 
@@ -119,7 +176,7 @@ export async function GET(req) {
     console.log('Fetching product data from:', url)
     const data = await fetchWithRetry(url)
 
-    // Verify product data and extract ID
+    // Verify product data
     if (!data?.pageProps?.productTemplate?.id) {
       console.error('Invalid product data format:', JSON.stringify(data).substring(0, 200))
       return NextResponse.json({ error: 'Invalid product data format', data }, { status: 500 })
@@ -128,69 +185,29 @@ export async function GET(req) {
     const productId = data.pageProps.productTemplate.id
     console.log('Product ID:', productId)
 
-    // Fetch price data with proper error handling
-    let priceData = null
-    try {
-      // Try multiple endpoints for price data
-      const priceEndpoints = [
-        `https://www.goat.com/web-api/v1/product_variants/buy_bar_data?productTemplateId=${productId}&countryCode=US`,
-        `https://www.goat.com/api/v1/product_variants/buy_bar_data?productTemplateId=${productId}&countryCode=US`,
-        `https://www.goat.com/api/v1/product_variants/buy_bar_data?productTemplateId=${productId}`,
-      ]
+    // Extract price data from the product data instead of making an API call
+    const priceData = extractPriceData(data) || { error: 'Could not extract price data' }
 
-      for (const endpoint of priceEndpoints) {
-        try {
-          console.log('Trying price data endpoint:', endpoint)
-          priceData = await fetchWithRetry(endpoint)
-          if (priceData) {
-            console.log('Successfully fetched price data')
-            break
-          }
-        } catch (e) {
-          console.log(`Failed with endpoint ${endpoint}, trying next...`)
-        }
-      }
-
-      if (!priceData) {
-        throw new Error('All price endpoints failed')
-      }
-    } catch (priceError) {
-      console.error('Failed to fetch price data:', priceError)
-      priceData = { error: 'Failed to fetch price data: ' + priceError.message }
-    }
-
-    // Fetch recommended products with proper error handling
+    // Try to fetch recommended products from the API
     let recommendedProducts = []
     try {
-      // Try multiple endpoints for recommended products
-      const recommendedEndpoints = [
-        `https://www.goat.com/web-api/v1/product_templates/recommended?productTemplateId=${productId}&count=8`,
-        `https://www.goat.com/api/v1/product_templates/recommended?productTemplateId=${productId}&count=8`,
-        `https://www.goat.com/web-api/v1/product_templates/${productId}/similar?count=8`,
-      ]
+      const recommendedUrl = `https://www.goat.com/api/v1/product_templates/recommended?productTemplateId=${productId}&count=8`
+      console.log('Fetching recommended products from:', recommendedUrl)
+      const recommendedResponse = await fetchWithRetry(recommendedUrl)
 
-      for (const endpoint of recommendedEndpoints) {
-        try {
-          console.log('Trying recommended products endpoint:', endpoint)
-          const recommendedResponse = await fetchWithRetry(endpoint)
-          if (recommendedResponse && recommendedResponse.productTemplates) {
-            recommendedProducts = recommendedResponse.productTemplates
-            console.log('Successfully fetched recommended products')
-            break
-          }
-        } catch (e) {
-          console.log(`Failed with endpoint ${endpoint}, trying next...`)
-        }
+      if (recommendedResponse && recommendedResponse.productTemplates) {
+        recommendedProducts = recommendedResponse.productTemplates
+        console.log('Successfully fetched recommended products')
+      } else {
+        // Extract recommended products from the main product data as a fallback
+        recommendedProducts = extractRecommendedProducts(data)
+        console.log('Using extracted recommended products')
       }
-
-      if (recommendedProducts.length === 0) {
-        throw new Error('All recommended product endpoints failed')
-      }
-    } catch (recommendedError) {
-      console.error('Failed to fetch recommended products:', recommendedError)
-      recommendedProducts = {
-        error: 'Failed to fetch recommended products: ' + recommendedError.message,
-      }
+    } catch (error) {
+      console.error('Failed to fetch recommended products:', error)
+      // Extract recommended products from the main product data as a fallback
+      recommendedProducts = extractRecommendedProducts(data)
+      console.log('Using extracted recommended products after error')
     }
 
     // Return combined response

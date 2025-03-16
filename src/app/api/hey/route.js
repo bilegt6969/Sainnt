@@ -1,13 +1,22 @@
 import { NextResponse } from 'next/server'
 
+// Configuration
+const CACHE_TTL = process.env.CACHE_TTL || 30 * 60 * 1000 // 30 minutes
+const DEFAULT_RETRIES = process.env.DEFAULT_RETRIES || 3
+const DEFAULT_TIMEOUT = process.env.DEFAULT_TIMEOUT || 10000
+
 // Helper function to fetch with timeout and retries
-const fetchWithRetry = async (url, options = {}, retries = 3, timeout = 10000) => {
+const fetchWithRetry = async (
+  url,
+  options = {},
+  retries = DEFAULT_RETRIES,
+  timeout = DEFAULT_TIMEOUT,
+) => {
   for (let i = 0; i < retries; i++) {
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
 
-      // Add headers that mimic a browser request
       const headers = {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -47,7 +56,6 @@ const fetchWithRetry = async (url, options = {}, retries = 3, timeout = 10000) =
 
 // Cache mechanism to reduce API calls
 const cache = new Map()
-const CACHE_TTL = 30 * 60 * 1000 // 30 minutes
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url)
@@ -87,8 +95,8 @@ export async function GET(req) {
           Cookie: `_session_id=${sessionId}; _goat_session=${sessionId}`,
         },
       },
-      3,
-      15000,
+      DEFAULT_RETRIES,
+      DEFAULT_TIMEOUT,
     )
 
     // If we don't get a productTemplate, something is wrong
@@ -113,8 +121,8 @@ export async function GET(req) {
           'X-Requested-With': 'XMLHttpRequest',
         },
       },
-      3,
-      15000,
+      DEFAULT_RETRIES,
+      DEFAULT_TIMEOUT,
     ).catch((error) => {
       console.error('Price data fetch failed:', error.message)
       return { error: 'Failed to fetch price data' }
@@ -128,8 +136,8 @@ export async function GET(req) {
           'X-Requested-With': 'XMLHttpRequest',
         },
       },
-      3,
-      15000,
+      DEFAULT_RETRIES,
+      DEFAULT_TIMEOUT,
     ).catch((error) => {
       console.error('Recommended products fetch failed:', error.message)
       return { error: 'Failed to fetch recommended products' }

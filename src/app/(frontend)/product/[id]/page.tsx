@@ -53,6 +53,10 @@ interface ApiResponse {
   }
   PriceData: PriceData[]
   recommendedProducts: Product[]
+  productId: PriceData[]
+
+  PriceTagUrl: PriceData[]
+  recommendedUrl: PriceData[]
 }
 
 // Function to convert US shoe sizes to EU sizes
@@ -123,6 +127,10 @@ function Page() {
           throw new Error('Failed to fetch data')
         }
         const result: ApiResponse = await response.json()
+        console.log(result.productId)
+        console.log(result.PriceTagUrl)
+        console.log(result.recommendedUrl)
+
         setData(result.data)
         setPriceData(result.PriceData)
         setRecommendedProducts(result.recommendedProducts || [])

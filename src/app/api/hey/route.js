@@ -1,52 +1,69 @@
 import { NextResponse } from 'next/server'
 
-// Enhanced helper function with better error handling, headers, and exponential backoff
+// Enhanced helper function with better error handling and direct JSON response checking
 const fetchWithRetry = async (url, options = {}, retries = 3, timeout = 15000) => {
   for (let i = 0; i < retries; i++) {
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), timeout)
 
-      // Add default browser-like headers if not provided
+      // Add comprehensive browser-like headers
       const headers = {
         'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
         Referer: 'https://www.goat.com/',
         Origin: 'https://www.goat.com',
-        Accept: 'application/json',
+        Accept: 'application/json, text/plain, */*',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
+        'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
         ...(options.headers || {}),
       }
+
+      console.log(`Fetching ${url} with retry ${i + 1}/${retries}`)
 
       const response = await fetch(url, {
         ...options,
         headers,
         signal: controller.signal,
-        credentials: 'omit', // Avoid sending cookies
+        credentials: 'omit',
       })
       clearTimeout(timeoutId)
 
-      // Log response status for debugging
-      console.log(`Fetch status for ${url}: ${response.status}`)
+      // Log response status and headers for debugging
+      console.log(`Response status for ${url}: ${response.status}`)
 
       if (!response.ok) {
-        let responseText = ''
+        let errorBody = ''
         try {
-          responseText = await response.text()
-          console.error(`Error response body: ${responseText.substring(0, 200)}...`)
+          errorBody = await response.text()
+          console.error(`Error response body (${url}): ${errorBody.substring(0, 200)}...`)
         } catch (e) {
-          console.error('Could not read response body')
+          console.error('Could not read error response body')
         }
         throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
       }
 
-      return await response.json()
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json()
+      } else {
+        const text = await response.text()
+        try {
+          // Try to parse as JSON anyway
+          return JSON.parse(text)
+        } catch (e) {
+          console.error(`Response is not JSON: ${text.substring(0, 200)}...`)
+          throw new Error('Response is not valid JSON')
+        }
+      }
     } catch (error) {
       console.error(`Attempt ${i + 1} failed for ${url}:`, error.message)
 
-      // Check if it's the last retry
       if (i === retries - 1) throw error
 
       // Exponential backoff
@@ -63,7 +80,7 @@ const fetchBuildId = async () => {
     const response = await fetch('https://www.goat.com/', {
       headers: {
         'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
       },
     })
     const html = await response.text()
@@ -71,15 +88,15 @@ const fetchBuildId = async () => {
     // Extract build ID from the HTML
     const buildIdMatch = html.match(/"buildId":"([^"]+)"/)
     if (buildIdMatch && buildIdMatch[1]) {
+      console.log('Found build ID:', buildIdMatch[1])
       return buildIdMatch[1]
     }
 
-    // Fallback to the hardcoded value if extraction fails
     console.warn('Could not extract build ID, using fallback')
     return 'ttPvG4Z_6ePho2xBcGAo6'
   } catch (error) {
     console.error('Failed to fetch build ID:', error)
-    return 'ttPvG4Z_6ePho2xBcGAo6' // Fallback to hardcoded value
+    return 'ttPvG4Z_6ePho2xBcGAo6'
   }
 }
 
@@ -104,7 +121,8 @@ export async function GET(req) {
 
     // Verify product data and extract ID
     if (!data?.pageProps?.productTemplate?.id) {
-      return NextResponse.json({ error: 'Invalid product data format' }, { status: 500 })
+      console.error('Invalid product data format:', JSON.stringify(data).substring(0, 200))
+      return NextResponse.json({ error: 'Invalid product data format', data }, { status: 500 })
     }
 
     const productId = data.pageProps.productTemplate.id
@@ -113,9 +131,29 @@ export async function GET(req) {
     // Fetch price data with proper error handling
     let priceData = null
     try {
-      const priceTagUrl = `https://www.goat.com/web-api/v1/product_variants/buy_bar_data?productTemplateId=${productId}&countryCode=US`
-      console.log('Fetching price data from:', priceTagUrl)
-      priceData = await fetchWithRetry(priceTagUrl)
+      // Try multiple endpoints for price data
+      const priceEndpoints = [
+        `https://www.goat.com/web-api/v1/product_variants/buy_bar_data?productTemplateId=${productId}&countryCode=US`,
+        `https://www.goat.com/api/v1/product_variants/buy_bar_data?productTemplateId=${productId}&countryCode=US`,
+        `https://www.goat.com/api/v1/product_variants/buy_bar_data?productTemplateId=${productId}`,
+      ]
+
+      for (const endpoint of priceEndpoints) {
+        try {
+          console.log('Trying price data endpoint:', endpoint)
+          priceData = await fetchWithRetry(endpoint)
+          if (priceData) {
+            console.log('Successfully fetched price data')
+            break
+          }
+        } catch (e) {
+          console.log(`Failed with endpoint ${endpoint}, trying next...`)
+        }
+      }
+
+      if (!priceData) {
+        throw new Error('All price endpoints failed')
+      }
     } catch (priceError) {
       console.error('Failed to fetch price data:', priceError)
       priceData = { error: 'Failed to fetch price data: ' + priceError.message }
@@ -124,10 +162,30 @@ export async function GET(req) {
     // Fetch recommended products with proper error handling
     let recommendedProducts = []
     try {
-      const recommendedUrl = `https://www.goat.com/web-api/v1/product_templates/recommended?productTemplateId=${productId}&count=8`
-      console.log('Fetching recommended products from:', recommendedUrl)
-      const recommendedResponse = await fetchWithRetry(recommendedUrl)
-      recommendedProducts = recommendedResponse.productTemplates || []
+      // Try multiple endpoints for recommended products
+      const recommendedEndpoints = [
+        `https://www.goat.com/web-api/v1/product_templates/recommended?productTemplateId=${productId}&count=8`,
+        `https://www.goat.com/api/v1/product_templates/recommended?productTemplateId=${productId}&count=8`,
+        `https://www.goat.com/web-api/v1/product_templates/${productId}/similar?count=8`,
+      ]
+
+      for (const endpoint of recommendedEndpoints) {
+        try {
+          console.log('Trying recommended products endpoint:', endpoint)
+          const recommendedResponse = await fetchWithRetry(endpoint)
+          if (recommendedResponse && recommendedResponse.productTemplates) {
+            recommendedProducts = recommendedResponse.productTemplates
+            console.log('Successfully fetched recommended products')
+            break
+          }
+        } catch (e) {
+          console.log(`Failed with endpoint ${endpoint}, trying next...`)
+        }
+      }
+
+      if (recommendedProducts.length === 0) {
+        throw new Error('All recommended product endpoints failed')
+      }
     } catch (recommendedError) {
       console.error('Failed to fetch recommended products:', recommendedError)
       recommendedProducts = {

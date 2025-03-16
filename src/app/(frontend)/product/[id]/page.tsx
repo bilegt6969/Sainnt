@@ -100,7 +100,7 @@ function Page() {
   useEffect(() => {
     const fetchCurrencyData = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/getcurrencydata')
+        const res = await fetch('https://saint-ashen.vercel.app/api/getcurrencydata')
         const data = await res.json()
         if (data.mnt) {
           setMntRate(data.mnt)

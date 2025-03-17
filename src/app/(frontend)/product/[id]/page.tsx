@@ -116,7 +116,6 @@ function Page() {
     fetchCurrencyData()
   }, [])
 
-  // Fetch product data and recommended products
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -125,23 +124,27 @@ function Page() {
           throw new Error('Failed to fetch data')
         }
         const result: ApiResponse = await response.json()
+        console.log('API Response:', result) // Log the response
+
+        // Update state with the fetched data
+        setData(result.data)
+        setPriceData(result.PriceData)
+        setRecommendedProducts(result.recommendedProducts)
 
         const AvailableProducts =
           result.PriceData?.filter(
             (item) =>
               item.stockStatus === 'multiple_in_stock' || item.stockStatus === 'single_in_stock',
-          ) || [] // Fallback to empty array if undefined
+          ) || []
 
         setNewTypeProduct(
           AvailableProducts.filter(
             (item) =>
               item.shoeCondition === 'new_no_defects' && item.boxCondition === 'good_condition',
-          ) || [], // Fallback to empty array
+          ) || [],
         )
 
-        setUsedTypeProduct(
-          AvailableProducts.filter((item) => item.shoeCondition === 'used') || [], // Fallback to empty array
-        )
+        setUsedTypeProduct(AvailableProducts.filter((item) => item.shoeCondition === 'used') || [])
 
         setOfferTypeProduct(
           AvailableProducts.filter(
@@ -151,10 +154,11 @@ function Page() {
               item.boxCondition === 'good_condition' ||
               item.boxCondition === 'badly_damaged' ||
               item.boxCondition === 'no_original_box',
-          ) || [], // Fallback to empty array
+          ) || [],
         )
       } catch (err) {
         if (err instanceof Error) {
+          console.error('Fetch error:', err) // Log the error
           setError(err.message)
         } else {
           setError('An unknown error occurred')

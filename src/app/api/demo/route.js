@@ -14,7 +14,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export async function GET() {
   const url =
-    'https://www.goat.com/_next/data/ttPvG4Z_6ePho2xBcGAo6/en-us/apparel/gel-1130-black-pure-silver-1201a906-001.json?tab=new&expandedSize=101&productTemplateSlug=gel-1130-black-pure-silver-1201a906-001'
+    'https://www.laced.com/_next/data/NsprqpqNCs4txBdmnH7ri/en/products/adidas-sl-72-og-leopard-print-womens.json?slug=adidas-sl-72-og-leopard-print-womens'
 
   try {
     // Randomly select a User-Agent
@@ -24,13 +24,23 @@ export async function GET() {
     await delay(Math.floor(Math.random() * 4000) + 1000)
 
     const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'User-Agent': userAgent,
         Accept: 'application/json, text/plain, */*',
         'Accept-Language': 'en-US,en;q=0.9',
         Referer: 'https://www.goat.com/',
         Origin: 'https://www.goat.com',
+        'Accept-Encoding': 'gzip, deflate, br',
+        Connection: 'keep-alive',
+        'Cache-Control': 'no-cache',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
+        Pragma: 'no-cache',
+        TE: 'trailers',
       },
+      credentials: 'include', // Include cookies
     })
 
     if (!response.ok) {
